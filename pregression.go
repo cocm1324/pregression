@@ -24,7 +24,7 @@ func Auto(x []float64, y []float64) ([]float64, float64, error) {
 
 	for d := 2; d < 10; d++ {
 		_co, _ := FixedDegree(x, y, d)
-		sse, sst, ssr := SseSstSsr(x, y, _co, d)
+		sse, sst, ssr := SseSstSsr(x, y, _co)
 		_rs := sse / sst
 		aic := AIC(len(y), d, ssr, true)
 
@@ -91,8 +91,9 @@ func BIC(_n, _k int, rss float64) float64 {
 
 // RssSst is function to calculate Residual Sum of Squared (RSS) and Total Sum of Squared(SST)
 // R squared can be calculated by dividing RSS by SST
-func SseSstSsr(x []float64, y []float64, w []float64, d int) (float64, float64, float64) {
-	mo := Calculate(x, w, d)
+func SseSstSsr(x []float64, y []float64, w []float64) (float64, float64, float64) {
+	d := len(w) - 1
+	mo := Calculate(x, w)
 	var ym float64
 	for _, v := range y {
 		ym += v
@@ -114,16 +115,16 @@ func SseSstSsr(x []float64, y []float64, w []float64, d int) (float64, float64, 
 }
 
 // Calculate is function to calculate model value of input
-// x is input vector, w is coefficient of polynomial regression model, and d would be degree of the model.
-func Calculate(x []float64, w []float64, d int) []float64 {
-	v := Vandermonde(x, d)
-	co := mat.NewDense(d+1, 1, w)
+// x is input vector, w is coefficient of polynomial regression model.
+func Calculate(x []float64, w []float64) []float64 {
+	v := Vandermonde(x, len(w)-1)
+	co := mat.NewDense(len(w), 1, w)
 
 	var resultVec mat.Dense
 	resultVec.Mul(v, co)
 
-	result := make([]float64, d+1)
-	for i := 0; i < d+1; i++ {
+	result := make([]float64, len(w))
+	for i := 0; i < len(w); i++ {
 		result[i] = resultVec.At(i, 0)
 	}
 	return result
